@@ -7,10 +7,19 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var session = require('express-session');
 var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
+var LocalStrategy = require('passport-local');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
+
+// mongo config
+var MONGOLAB_URI= "add_your_mongolab_uri_here"
+var mongo = process.env.MONGOLAB_URI || 'mongodb://localhost/node-local-test'
+mongoose.connect(mongo);
+
+// mongo model
+// var Model_Name = require('add_your_models_here');
+var User = require('./models/user');
 
 var app = express();
 app.set('port', process.env.PORT || 3000);
@@ -31,24 +40,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: 'my serete',
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true }
+  saveUninitialized: false
 }))
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-// mongo config
-var MONGOLAB_URI= "add_your_mongolab_uri_here"
-var mongo = process.env.MONGOLAB_URI || 'mongodb://localhost/node-local-test'
-mongoose.connect(mongo);
-
-// mongo model
-// var Model_Name = require('add_your_models_here');
-var User = require('./models/user');
-
 // passport config
-passport.use((User.createStrategy()));
+passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
